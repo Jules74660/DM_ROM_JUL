@@ -1,0 +1,284 @@
+---
+title: "Utiliser R pour faire son plan d'échantillonnage"
+output: html_document
+---
+
+Ce TD est utilisé dans l'U.E. stratégies d'échantillonnage dispensée dans le master Sciences de l'Eau de l'Université de Pau et des Pays de l'Adour. (Créer par Claire Kermorvant [claire\@statenco.com](mailto:claire@statenco.com){.email}).
+
+```{r setup, include=TRUE,echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+# Prérequis
+
+Au-delà des connaissances sur la théorie de l'échantillonnage acquise dans le cours, il est necessaire d'être utilisateur de R pour faire ce TD.
+
+Ce TD fonctionne sous *R \> 4.2*, pour mettre à jour votre version de R il peut être nécessaire de le supprimer totalement de votre machine puis de le réinstaller (Téléchargement pour toutes les plateformes [ici](https://cran.r-project.org/)). Dans un soucis de fluidité il est conseillé d'utiliser [RStudio Desktop](https://www.rstudio.com/products/rstudio/).
+
+Ce document est crée avec le package 'Rmarkdown', pour un rappel rapide veuillez regarder le [cheat sheet] (<https://raw.githubusercontent.com/rstudio/cheatsheets/main/rmarkdown-2.0.pdf>) ou le [guide de référence](https://www.rstudio.com/wp-content/uploads/2015/03/rmarkdown-reference.pdf?_ga=2.155123448.1996724033.1658409046-126076847.1658409046). Pour une prise en main, veuillez suivre ce [tutoriel](https://rmarkdown.rstudio.com/lesson-1.html).
+
+Le chunk suivant rappelle les packages qui vont être utilisés et qui doivent donc être téléchargés au préalable :
+
+```{r packages}
+library(spsurvey)
+#library(maptools)
+library(cartography)
+library(readxl)
+library(tidyverse)
+library(viridisLite)
+```
+
+# Importation des données
+
+Commencez par définir le working directory (le chemin dans votre ordinateur où vos fichiers sont stockés et où vous voulez que R envoir automatiquement vos résultats).
+
+```{r}
+Chemin <- "../TD1-dossier-etudiants/"
+setwd(Chemin)
+```
+
+Ensuite, importez dans votre session le shapefile qui va être utilisé pour le suivi.
+
+```{r}
+rivieres<-sf::st_read("bassin versant nive.shp")
+```
+
+On peut le visualiser rapidement avec l'aide du package cartography ([vignette](https://cran.r-project.org/web/packages/cartography/vignettes/cartography.html)):
+
+```{r}
+plot(st_geometry(rivieres), col = "black", border = "grey")
+
+# layout
+layoutLayer(title = "Rivières d'étude",
+            sources = "Sources: ",
+            author = "Claire Kermorvant",
+            frame = FALSE, north = FALSE, tabtitle = TRUE,
+            scale = "auto")
+# north arrow
+north(pos = "topleft", col = "red")
+```
+
+# Aléatoire simple
+
+## Tirage
+
+```{r}
+srs <-spsurvey::irs(rivieres, n_base = 20, projcrs_check = FALSE)
+```
+
+## Visualisation
+
+```{r}
+par(mfrow = c(1,2))
+
+# plot 1
+plot(st_geometry(rivieres), col = "black", border = NA, bg = "lightblue1")
+
+typoLayer(
+  x = srs$sites_base, 
+  var = "siteuse",
+  col = "red", 
+  lwd = .7,
+  add = TRUE,
+  legend.pos = "n"
+)
+
+layoutLayer(title = "Sites à visiter",
+            sources = "", 
+            author = "Claire Kermorvant", 
+            north = FALSE, tabtitle = TRUE, postitle = "right", 
+            col = "white", coltitle = "black") 
+
+north(pos = "topleft") # north arrow
+
+# plot 2
+plot(st_geometry(rivieres), col = "black", border = NA, bg = "lightblue1")
+
+labelLayer(x = srs$sites_base, txt = "siteID", 
+           cex = 0.8, halo = TRUE, r = 0.1)
+
+layoutLayer(title = "Sites à visiter",
+            sources = "", 
+            author = "Claire Kermorvant", 
+            north = FALSE, tabtitle = TRUE, postitle = "right", 
+            col = "white", coltitle = "black") 
+
+north(pos = "topleft") # north arrow
+```
+
+## Export
+
+Vous pouvez exporter la table de données en fichier .txt :
+
+```{r,eval=FALSE}
+write.csv(srs$sites_base,"SRS.csv")
+```
+
+# GRTS
+
+## Tirage
+
+```{r}
+grts<-spsurvey::grts(rivieres, n_base = 20, projcrs_check = FALSE)
+```
+
+## Visualisation
+
+```{r}
+par(mfrow = c(1,2))
+
+# plot 1
+plot(st_geometry(rivieres), col = "black", border = NA, bg = "lightblue1")
+
+typoLayer(
+  x = grts$sites_base, 
+  var = "siteuse",
+  col = "red", 
+  lwd = .7,
+  add = TRUE,
+  legend.pos = "n"
+)
+
+layoutLayer(title = "Sites à visiter",
+            sources = "", 
+            author = "Claire Kermorvant", 
+            north = FALSE, tabtitle = TRUE, postitle = "right", 
+            col = "white", coltitle = "black") 
+
+north(pos = "topleft") # north arrow
+
+# carte 2
+
+plot(st_geometry(rivieres), col = "black", border = NA, bg = "lightblue1")
+
+
+labelLayer(x = grts$sites_base, txt = "siteID", 
+           cex = 0.8, halo = TRUE, r = 0.1)
+
+layoutLayer(title = "Sites à visiter",
+            sources = "", 
+            author = "Claire Kermorvant", 
+            north = FALSE, tabtitle = TRUE, postitle = "right", 
+            col = "white", coltitle = "black") 
+
+north(pos = "topleft")# north arrow
+```
+
+```{r}
+grts<-spsurvey::grts(rivieres, n_base = 20, n_over = 5, projcrs_check = FALSE)
+```
+
+## Visualisation
+
+```{r}
+par(mfrow = c(1,2))
+
+# plot 1
+plot(st_geometry(rivieres), col = "black", border = NA, bg = "lightblue1")
+
+typoLayer(
+  x = grts$sites_base, 
+  var = "siteuse",
+  col = "black", 
+  lwd = .7,
+  add = TRUE,
+  legend.pos = "n"
+)
+
+typoLayer(
+  x = grts$sites_over, 
+  var = "siteuse",
+  col = "red", 
+  lwd = .7,
+  add = TRUE,
+  legend.pos = "n"
+)
+
+layoutLayer(title = "Sites à visiter",
+            sources = "", 
+            author = "Claire Kermorvant", 
+            north = FALSE, tabtitle = TRUE, postitle = "right", 
+            col = "white", coltitle = "black") 
+
+north(pos = "topleft") # north arrow
+
+# carte 2
+
+plot(st_geometry(rivieres), col = "black", border = NA, bg = "lightblue1")
+
+
+labelLayer(x = grts$sites_base, txt = "siteID", 
+           cex = 0.8, halo = TRUE, r = 0.1)
+labelLayer(x = grts$sites_over, txt = "siteID", 
+           cex = 0.8, halo = TRUE, r = 0.1, col = "red")
+
+layoutLayer(title = "Sites à visiter",
+            sources = "", 
+            author = "Claire Kermorvant", 
+            north = FALSE, tabtitle = TRUE, postitle = "right", 
+            col = "white", coltitle = "black") 
+
+north(pos = "topleft")# north arrow
+```
+
+## Export
+
+Vous pouvez exporter la table de données en fichier txt ou xls :
+
+```{r,eval=FALSE}
+write.csv(grts$sites_base,"File Name.csv")
+```
+
+# A vous de jouer
+
+Vous voulez mettre en place le suivi d'une espèce terrestre en Guadeloupe. Etant en stage de 6 mois, vous n'allez pas pouvoir aller échantillonner l'île entière. Vous aimeriez néanmoins avoir une base de données fiable concernant la présence de l'espèce dans chaque type d'habitat majoritaire de l'île.
+
+Comme vous avez bien suivi vos cours de master, vous savez qu'il existe une base de donnée, Corine Land Cover, qui découpe la France entière en différents types de couverture des sols. Plus d'infos sur [le site internet CLC](https://www.statistiques.developpement-durable.gouv.fr/corine-land-cover-0).
+
+Le chunk suivant vous permet de télécharger et de dézipper la base de données Corine Land Cover depuis data.gouv pour le département de la Guadeloupe.
+
+```{r,eval=FALSE}
+download.file('http://www.donnees.statistiques.developpement-durable.gouv.fr/donneesCLC/CLC/region/CLC_D971_UTM_SHP.zip', destfile = 'CLC')
+unzip('CLC')
+```
+
+## 1 - Corine Land Cover
+
+Importer le shp et la nomenclature puis rajouter une colonne avec le nom en français du type de couverture des sols dans le shp
+
+```{r}
+
+```
+
+## 2 - Faites une carte avec les différents types de sols
+
+```{r}
+
+```
+
+Il a des types de sols très peu représentés, vous décider de n' échantillonner que ceux qui rassemblent plus de 500 HA et qui ne sont pas marin ( 5230 - Mers et océans) - puisque vous vous intéressez à une espèce terrestre.
+
+## 3 - Créez votre population statistiques
+
+en ne sélectionnant que les polygones représentant un type de couverture de sol terrestre présent sur plus de 500 HA sur l'île.
+
+```{r}
+
+```
+
+## 3- Tirage du plan d'échantillonnage + carte
+
+Utilisez le package spsurvey pour sélectionner un plan d'échantillonnage GRTS avec un effort d'échantillonnage égal dans chaque type de sols, faites une carte.
+
+```{r}
+
+
+```
+
+```{r}
+
+```
+
+## 4 - Pour aller plus loin
+
+Exportez en fichier csv votre suivi, et faites une carte sous Qgis.
