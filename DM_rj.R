@@ -30,3 +30,5 @@ couv <- st_read("CLC_D971_UTM_SHP.shp")
 
 #%>%
   st_transform(crs = 2154)
+  
+  # josdhfbucioez cohnds
