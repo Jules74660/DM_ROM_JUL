@@ -4,3 +4,9 @@ author: "Roes Julien"
 date: "2025-09-21"
 output: html_document
 ---
+
+Vous voulez mettre en place le suivi d'une espèce terrestre en Guadeloupe. Etant en stage de 6 mois, vous n'allez pas pouvoir aller échantillonner l'île entière. Vous aimeriez néanmoins avoir une base de données fiable concernant la présence de l'espèce dans chaque type d'habitat majoritaire de l'île.
+
+Comme vous avez bien suivi vos cours de master, vous savez qu'il existe une base de donnée, Corine Land Cover, qui découpe la France entière en différents types de couverture des sols. Plus d'infos sur [le site internet CLC](https://www.statistiques.developpement-durable.gouv.fr/corine-land-cover-0).
+
+Le chunk suivant vous permet de télécharger et de dézipper la base de données Corine Land Cover depuis data.gouv pour le département de la Guadeloupe.
