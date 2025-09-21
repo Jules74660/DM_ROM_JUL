@@ -68,9 +68,24 @@ couv2012 <- left_join(couv2012, nomenclature, by = c("code_CLC" = "code_clc_nive
 
 ```
 
+
+```{r 500 ha plus et pas marin}
+
+couv2000 <- couv2000 %>%
+  filter(AREA_HA > 500 & code_CLC != "5")
+
+couv2006 <- couv2006 %>%
+  filter(AREA_HA > 500 & code_CLC != "5")
+
+couv2012 <- couv2012 %>%
+  filter(AREA_HA > 500 & code_CLC != "5")
+```
+
+
 ```{r carte couverture des sols 2000}
 
 ggplot() +
+  geom_sf(data = couv2000, fill = "grey", color = "red") +
   geom_sf(data = couv2000, aes(fill = code_CLC), color = NA) +
   scale_fill_viridis_d(option = "D", name = "Type de couverture des sols") +
   theme_minimal() +
@@ -80,6 +95,8 @@ ggplot() +
   theme(legend.position = "bottom")
 
 ```
+
+
 
 
 
