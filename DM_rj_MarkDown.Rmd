@@ -5,8 +5,82 @@ date: "2025-09-21"
 output: html_document
 ---
 
+Consigne : 
+
 Vous voulez mettre en place le suivi d'une espèce terrestre en Guadeloupe. Etant en stage de 6 mois, vous n'allez pas pouvoir aller échantillonner l'île entière. Vous aimeriez néanmoins avoir une base de données fiable concernant la présence de l'espèce dans chaque type d'habitat majoritaire de l'île.
 
 Comme vous avez bien suivi vos cours de master, vous savez qu'il existe une base de donnée, Corine Land Cover, qui découpe la France entière en différents types de couverture des sols. Plus d'infos sur [le site internet CLC](https://www.statistiques.developpement-durable.gouv.fr/corine-land-cover-0).
 
 Le chunk suivant vous permet de télécharger et de dézipper la base de données Corine Land Cover depuis data.gouv pour le département de la Guadeloupe.
+
+```{r chargement des packages}
+
+pacman::p_load(tidyverse, spsurvey, maptools, cartography, readxl, viridisLite, sf)
+install.packages("maptools")
+
+```
+
+
+```{r setup}
+
+getwd() # si on ouvre avec le r.proj on devrait avoir le bon chemin sinon on copie colle le résultat
+
+Chemin <- "/Users/jules/Desktop/Master/M2/strategie_echantillonage/DM_ROM_JUL"
+setwd(Chemin)
+
+```
+
+```{r import}
+
+download.file('http://www.donnees.statistiques.developpement-durable.gouv.fr/donneesCLC/CLC/region/CLC_D971_UTM_SHP.zip', destfile = 'CLC')
+unzip('CLC')
+
+```
+
+
+```{r Import}
+
+nomenclature <- readxl::read_excel("CLC_D971_UTM_SHP/CLC_nomenclature.xls")
+couv2000 <- st_read("CLC_D971_UTM_SHP/CLC00/CLC00_D971_UTM.shp")
+couv2006 <- st_read("CLC_D971_UTM_SHP/CLC06/CLC06_D971_UTM.shp")
+couv2012 <- st_read("CLC_D971_UTM_SHP/CLC12/CLC12_D971_UTM.shp")
+
+```
+
+```{r colonne type de sol}
+
+couv2000 <- couv2000 %>% 
+  mutate(code_CLC = substr(as.character(CODE_00), 1, 1))
+
+couv2006 <- couv2006 %>% 
+  mutate(code_CLC = substr(as.character(CODE_06), 1, 1))
+
+couv2012 <- couv2012 %>% 
+  mutate(code_CLC = substr(as.character(CODE_12), 1, 1))
+
+```
+
+```{r association}
+
+couv2000 <- left_join(couv2000, nomenclature, by = c("code_CLC" = "code_clc_niveau_1"))
+couv2006 <- left_join(couv2006, nomenclature, by = c("code_CLC" = "code_clc_niveau_1"))
+couv2012 <- left_join(couv2012, nomenclature, by = c("code_CLC" = "code_clc_niveau_1"))
+
+```
+
+```{r carte couverture des sols 2000}
+
+ggplot() +
+  geom_sf(data = couv2000, aes(fill = code_CLC), color = NA) +
+  scale_fill_viridis_d(option = "D", name = "Type de couverture des sols") +
+  theme_minimal() +
+  labs(title = "Couverture des sols en Guadeloupe",
+       subtitle = "Données Corine Land Cover 2000",
+       caption = "Source : data.gouv.fr") +
+  theme(legend.position = "bottom")
+
+```
+
+
+
+
