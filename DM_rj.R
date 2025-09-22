@@ -72,10 +72,44 @@ ggplot() +
 # puisque vous vous intéressez à une espèce terrestre.
 
 
-grts <- spsurvey::grts(couv2000, n_base = 10)
+
+# GRTS + carto
+couv2012 <- couv2012 %>%
+  filter(AREA_HA > 500 & code_CLC != "5")
 
 
+library(spsurvey)
+
+n_base <- c("1" = 10, "2" = 10, "3" = 10)
+
+GRTSpts <- grts(
+  sframe = couv2012,
+  n_base = n_base,
+  stratum_var = "code_CLC",
+  DesignID = "DM_Rom_Jul"
+)
+
+GRTS_sf <- st_as_sf(GRTSpts$sites_base, coords = c("X","Y"), crs = st_crs(couv2012))
 
 
+st_write(GRTS_sf, "tirage_GRTS.shp", delete_dsn = TRUE)
 
+
+library(RColorBrewer)
+
+colors_strata <- brewer.pal(3, "Set1")
+couv2012$color <- case_when(
+  couv2012$code_CLC == "1" ~ colors_strata[1],
+  couv2012$code_CLC == "2" ~ colors_strata[2],
+  couv2012$code_CLC == "3" ~ colors_strata[3]
+)
+
+plot(st_geometry(couv2012), col = couv2012$color, main = "Tirage GRTS par habitat")
+plot(st_geometry(GRTS_sf), col = "black", pch = 15, add = TRUE)  # points en noir
+legend("topright", legend = c("Habitat 1","Habitat 2","Habitat 3"),
+       fill = colors_strata)
+
+
+GRTS_df <- GRTSpts$sites_base
+write.csv(GRTS_df, "tirage_GRTS.csv", row.names = FALSE)
 
