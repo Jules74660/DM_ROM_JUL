@@ -1,11 +1,29 @@
 ---
-title: "dm_rj_MarkDown"
-author: "Roes Julien"
-date: "2025-09-21"
-output: html_document
+title: ""
+output: 
+  html_document:
+    theme: cosmo
+    toc: true
+    toc_float: true
+  pdf_document:
+    toc: true
 ---
 
-Consigne : 
+::: {style="text-align: right;"}
+Date de dernière mise à jour du document : `r Sys.Date()`
+:::
+
+
+::: {style="background-color: black; padding: 12px; border-radius: 5px; text-align: center; margin-bottom: 20px;"}
+<strong style="color: white; font-size: 2.3em;">
+  Élaboration d’un plan d’échantillonnage GRTS : cas du Crapaud Buffle (*Rhinella marina*) <br>
+</strong>
+:::
+
+# Introduction
+
+<hr style="border:2px solid gray">
+
 
 Vous voulez mettre en place le suivi d'une espèce terrestre en Guadeloupe. Etant en stage de 6 mois, vous n'allez pas pouvoir aller échantillonner l'île entière. Vous aimeriez néanmoins avoir une base de données fiable concernant la présence de l'espèce dans chaque type d'habitat majoritaire de l'île.
 
@@ -13,7 +31,13 @@ Comme vous avez bien suivi vos cours de master, vous savez qu'il existe une base
 
 Le chunk suivant vous permet de télécharger et de dézipper la base de données Corine Land Cover depuis data.gouv pour le département de la Guadeloupe.
 
-```{r chargement des packages}
+
+# Chargement du jeu de données et association
+
+<hr style="border:2px solid gray">
+
+
+```{r chargement des packages, echo=FALSE, message=FALSE, warnings=FALSE,include=FALSE}
 
 pacman::p_load(tidyverse, spsurvey, maptools, cartography, readxl, viridisLite, sf)
 install.packages("maptools")
@@ -21,7 +45,7 @@ install.packages("maptools")
 ```
 
 
-```{r setup}
+```{r setup, include=FALSE, echo=FALSE, message=FALSE}
 
 getwd() # si on ouvre avec le r.proj on devrait avoir le bon chemin sinon on copie colle le résultat
 
@@ -30,15 +54,12 @@ setwd(Chemin)
 
 ```
 
-```{r import}
+SI BESOIN : 
 
 download.file('http://www.donnees.statistiques.developpement-durable.gouv.fr/donneesCLC/CLC/region/CLC_D971_UTM_SHP.zip', destfile = 'CLC')
 unzip('CLC')
 
-```
-
-
-```{r Import}
+```{r Import,, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 
 nomenclature <- readxl::read_excel("CLC_D971_UTM_SHP/CLC_nomenclature.xls")
 couv2000 <- st_read("CLC_D971_UTM_SHP/CLC00/CLC00_D971_UTM.shp")
@@ -47,7 +68,10 @@ couv2012 <- st_read("CLC_D971_UTM_SHP/CLC12/CLC12_D971_UTM.shp")
 
 ```
 
-```{r colonne type de sol}
+
+## Association
+
+```{r colonne type de sol, echo=FALSE, message=FALSE}
 
 couv2000 <- couv2000 %>% 
   mutate(code_CLC = substr(as.character(CODE_00), 1, 1))
@@ -60,7 +84,7 @@ couv2012 <- couv2012 %>%
 
 ```
 
-```{r association}
+```{r association,echo=FALSE, message=FALSE}
 
 couv2000 <- left_join(couv2000, nomenclature, by = c("code_CLC" = "code_clc_niveau_1"))
 couv2006 <- left_join(couv2006, nomenclature, by = c("code_CLC" = "code_clc_niveau_1"))
@@ -69,7 +93,7 @@ couv2012 <- left_join(couv2012, nomenclature, by = c("code_CLC" = "code_clc_nive
 ```
 
 
-```{r 500 ha plus et pas marin}
+```{r 500 ha plus et pas marin, echo=FALSE, message=FALSE}
 
 couv2000 <- couv2000 %>%
   filter(AREA_HA > 500 & code_CLC != "5")
@@ -81,12 +105,17 @@ couv2012 <- couv2012 %>%
   filter(AREA_HA > 500 & code_CLC != "5")
 ```
 
+# Cartographie de la typologie des sols {.tabset}
+
+<hr style="border:2px solid gray">
+
+## 2000
 
 ```{r carte couverture des sols 2000}
 
 ggplot() +
-  geom_sf(data = couv2000, fill = "grey", color = "red") +
-  geom_sf(data = couv2000, aes(fill = code_CLC), color = NA) +
+  geom_sf(data = couv2012, fill = "grey", color = "red") +
+  geom_sf(data = couv2012, aes(fill = code_CLC), color = NA) +
   scale_fill_viridis_d(option = "D", name = "Type de couverture des sols") +
   theme_minimal() +
   labs(title = "Couverture des sols en Guadeloupe",
@@ -96,8 +125,35 @@ ggplot() +
 
 ```
 
+## 2006
+
+## 2012
+
+# {-}
 
 
 
+# Création de la population statistique
 
+<hr style="border:2px solid gray">
+
+
+# GRTS
+
+<hr style="border:2px solid gray">
+
+
+
+C'est une valeur arbitraire mais on justifie ce nombre par le fait que l'on veut un nombre d'échantillons gérable en 6 mois de stage.
+
+On fait un GRTS car ...... 
+
+# Cartographie via QGIS 
+
+<hr style="border:2px solid gray">
+
+
+::: {style="display: flex; gap: 20px; align-items: center;"}
+![](Capture d’écran 2024-10-05 à 08.59.10.png){width="180"}
+:::
 

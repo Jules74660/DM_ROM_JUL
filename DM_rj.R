@@ -72,6 +72,9 @@ ggplot() +
 # puisque vous vous intéressez à une espèce terrestre.
 
 
+grts <- spsurvey::grts(couv2000, n_base = 10)
+
+
 
 
 
