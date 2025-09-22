@@ -63,6 +63,7 @@ unzip('CLC')
 
 nomenclature <- readxl::read_excel("CLC_D971_UTM_SHP/CLC_nomenclature.xls")
 couv2000 <- st_read("CLC_D971_UTM_SHP/CLC00/CLC00_D971_UTM.shp")
+couvcarte <- st_read("CLC_D971_UTM_SHP/CLC00/CLC00_D971_UTM.shp")
 couv2006 <- st_read("CLC_D971_UTM_SHP/CLC06/CLC06_D971_UTM.shp")
 couv2012 <- st_read("CLC_D971_UTM_SHP/CLC12/CLC12_D971_UTM.shp")
 
@@ -82,6 +83,9 @@ couv2006 <- couv2006 %>%
 couv2012 <- couv2012 %>% 
   mutate(code_CLC = substr(as.character(CODE_12), 1, 1))
 
+couvcarte <- couvcarte %>% 
+  mutate(code_CLC = substr(as.character(CODE_00), 1, 1))
+
 ```
 
 ```{r association,echo=FALSE, message=FALSE}
@@ -89,6 +93,7 @@ couv2012 <- couv2012 %>%
 couv2000 <- left_join(couv2000, nomenclature, by = c("code_CLC" = "code_clc_niveau_1"))
 couv2006 <- left_join(couv2006, nomenclature, by = c("code_CLC" = "code_clc_niveau_1"))
 couv2012 <- left_join(couv2012, nomenclature, by = c("code_CLC" = "code_clc_niveau_1"))
+couvcarte <- left_join(couvcarte, nomenclature, by = c("code_CLC" = "code_clc_niveau_1"))
 
 ```
 
@@ -103,6 +108,9 @@ couv2006 <- couv2006 %>%
 
 couv2012 <- couv2012 %>%
   filter(AREA_HA > 500 & code_CLC != "5")
+
+couvcarte <- couvcarte %>% filter(code_CLC != "5")
+
 ```
 
 # Cartographie de la typologie des sols {.tabset}
@@ -114,7 +122,7 @@ couv2012 <- couv2012 %>%
 ```{r carte couverture des sols 2000}
 
 ggplot() +
-  geom_sf(data = couv2012, fill = "grey", color = "red") +
+  geom_sf(data = couvcarte, fill = "grey") +
   geom_sf(data = couv2012, aes(fill = code_CLC), color = NA) +
   scale_fill_viridis_d(option = "D", name = "Type de couverture des sols") +
   theme_minimal() +

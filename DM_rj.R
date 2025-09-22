@@ -26,9 +26,10 @@ unzip('CLC')
 # OBJECTIF : Importer le shp et la nomenclature puis rajouter une colonne avec le nom 
 # en français du type de couverture des sols dans le shp
 
-# Import de la nomenclature
+# Import de la nomenclature feuille 4
 
-nomenclature <- readxl::read_excel("CLC_D971_UTM_SHP/CLC_nomenclature.xls")
+nomenclature <- readxl::read_excel("CLC_D971_UTM_SHP/CLC_nomenclature.xls", sheet = 4)
+#nomenclature <- readxl::read_excel("CLC_D971_UTM_SHP/CLC_nomenclature.xls")
 
 # Import du shapefile
 
@@ -36,22 +37,40 @@ couv2000 <- st_read("CLC_D971_UTM_SHP/CLC00/CLC00_D971_UTM.shp")
 couv2006 <- st_read("CLC_D971_UTM_SHP/CLC06/CLC06_D971_UTM.shp")
 couv2012 <- st_read("CLC_D971_UTM_SHP/CLC12/CLC12_D971_UTM.shp")
 
-couv2000 <- couv2000 %>% 
-  mutate(code_CLC = substr(as.character(CODE_00), 1, 1))
+#couv2000 <- couv2000 %>% 
+#  mutate(code_CLC = substr(as.character(CODE_00), 1, 1))
 
-couv2006 <- couv2006 %>% 
-  mutate(code_CLC = substr(as.character(CODE_06), 1, 1))
+#couv2006 <- couv2006 %>% 
+#  mutate(code_CLC = substr(as.character(CODE_06), 1, 1))
 
-couv2012 <- couv2012 %>% 
-  mutate(code_CLC = substr(as.character(CODE_12), 1, 1))
+#couv2012 <- couv2012 %>% 
+#  mutate(code_CLC = substr(as.character(CODE_12), 1, 1))
 
+# Associer le type de sols au shapefile avec le code CLC dans CODE_00 du jeu de données nomenclature couv2000
 
+couv2000 <- left_join(couv2000, nomenclature, by = c("CODE_00" = "code_clc_niveau_4"))
+couv2006 <- left_join(couv2006, nomenclature, by = c("CODE_06" = "code_clc_niveau_4"))
+couv2012 <- left_join(couv2012, nomenclature, by = c("CODE_12" = "code_clc_niveau_4"))
 
-# Associer le type de sols au shapefile avec le code CLC dans CODE_00 du jeu de données nomenclature 
+# en faisant la somme des AREA_HA par habitat sa fait une valeur et il faut enlever ceux inféreieur en 500 ha 
 
-couv2000 <- left_join(couv2000, nomenclature, by = c("code_CLC" = "code_clc_niveau_1"))
-couv2006 <- left_join(couv2006, nomenclature, by = c("code_CLC" = "code_clc_niveau_1"))
-couv2012 <- left_join(couv2012, nomenclature, by = c("code_CLC" = "code_clc_niveau_1"))
+couv2000 <- couv2000 %>%
+  group_by(CODE_00, libelle_fr) %>%
+  summarise(AREA_HA = sum(AREA_HA, na.rm = TRUE), .groups = "drop") %>%
+  filter(AREA_HA >= 500) %>% 
+  filter(CODE_00 != "5230")
+
+couv2006 <- couv2006 %>%
+  group_by(CODE_06, libelle_fr) %>%
+  summarise(AREA_HA = sum(AREA_HA, na.rm = TRUE), .groups = "drop") %>%
+  filter(AREA_HA >= 500) %>% 
+  filter(CODE_06 != "5230")
+
+couv2012 <- couv2012 %>%
+  group_by(CODE_12, libelle_fr) %>%
+  summarise(AREA_HA = sum(AREA_HA, na.rm = TRUE), .groups = "drop") %>%
+  filter(AREA_HA >= 500) %>% 
+  filter(CODE_12 != "5230")
 
 #### 2 ####
 
@@ -59,7 +78,7 @@ couv2012 <- left_join(couv2012, nomenclature, by = c("code_CLC" = "code_clc_nive
 # Carte de la couverture des sols
 
 ggplot() +
-  geom_sf(data = couv2000, aes(fill = code_CLC), color = NA) +
+  geom_sf(data = couv2012, aes(fill = CODE_12), color = NA) +
   scale_fill_viridis_d(option = "D", name = "Type de couverture des sols") +
   theme_minimal() +
   labs(title = "Couverture des sols en Guadeloupe",
