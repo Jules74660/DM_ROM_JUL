@@ -90,21 +90,19 @@ ggplot() +
 # ceux qui rassemblent plus de 500 HA et qui ne sont pas marin ( 5230 - Mers et océans)
 # puisque vous vous intéressez à une espèce terrestre.
 
-
-
-# GRTS + carto
-couv2012 <- couv2012 %>%
-  filter(AREA_HA > 500 & code_CLC != "5")
-
+  # GRTS + carto
 
 library(spsurvey)
 
-n_base <- c("1" = 10, "2" = 10, "3" = 10)
+codes <- c("1120","1210","2112","2222","2310","2420","2430",
+                  "3111","3112","3220","3230","3240","4110")
+
+n_base <- setNames(rep(3, length(codes)), codes)
 
 GRTSpts <- grts(
   sframe = couv2012,
   n_base = n_base,
-  stratum_var = "code_CLC",
+  stratum_var = "CODE_12",
   DesignID = "DM_Rom_Jul"
 )
 
@@ -114,21 +112,24 @@ GRTS_sf <- st_as_sf(GRTSpts$sites_base, coords = c("X","Y"), crs = st_crs(couv20
 st_write(GRTS_sf, "tirage_GRTS.shp", delete_dsn = TRUE)
 
 
+
+library(viridis)
+library(dplyr)
+library(sf)
 library(RColorBrewer)
 
-colors_strata <- brewer.pal(3, "Set1")
-couv2012$color <- case_when(
-  couv2012$code_CLC == "1" ~ colors_strata[1],
-  couv2012$code_CLC == "2" ~ colors_strata[2],
-  couv2012$code_CLC == "3" ~ colors_strata[3]
-)
+colors_strata <- viridis(13)
+couv2012$color <- colors_strata[match(couv2012$CODE_12, codes)]
 
 plot(st_geometry(couv2012), col = couv2012$color, main = "Tirage GRTS par habitat")
-plot(st_geometry(GRTS_sf), col = "black", pch = 15, add = TRUE)  # points en noir
-legend("topright", legend = c("Habitat 1","Habitat 2","Habitat 3"),
-       fill = colors_strata)
+plot(st_geometry(GRTS_sf), col = "red", pch = 15, add = TRUE)  # points en noir
 
+legend("topright", legend = c("Habitat 1","Habitat 2","Habitat 3","Habitat 4","Habitat 5",
+                              "Habitat 6","Habitat 7","Habitat 8","Habitat 9",
+                              "Habitat 10","Habitat 11","Habitat 12","Habitat 13"),
+       fill = colors_strata[1:13])
 
 GRTS_df <- GRTSpts$sites_base
 write.csv(GRTS_df, "tirage_GRTS.csv", row.names = FALSE)
+
 
