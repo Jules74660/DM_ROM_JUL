@@ -90,8 +90,6 @@ ggplot() +
 # ceux qui rassemblent plus de 500 HA et qui ne sont pas marin ( 5230 - Mers et océans)
 # puisque vous vous intéressez à une espèce terrestre.
 
-
-
 # GRTS + carto
 couv2012 <- couv2012 %>%
   filter(AREA_HA > 500 & code_CLC != "5")

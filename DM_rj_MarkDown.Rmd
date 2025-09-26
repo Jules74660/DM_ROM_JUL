@@ -9,10 +9,6 @@ output:
     toc: true
 ---
 
-::: {style="text-align: right;"}
-Date de dernière mise à jour du document : `r Sys.Date()`
-:::
-
 
 ::: {style="background-color: black; padding: 12px; border-radius: 5px; text-align: center; margin-bottom: 20px;"}
 <strong style="color: white; font-size: 2.3em;">
@@ -32,15 +28,23 @@ Comme vous avez bien suivi vos cours de master, vous savez qu'il existe une base
 Le chunk suivant vous permet de télécharger et de dézipper la base de données Corine Land Cover depuis data.gouv pour le département de la Guadeloupe.
 
 
-# Chargement du jeu de données et association
+layoutlayer 
+
+tableau des points avec coordonnées
+
+
+
+>500 hors code mers et océan
+
+
+# Importation du .shp et association du type de couverture des sols via la nomenclature
 
 <hr style="border:2px solid gray">
 
 
-```{r chargement des packages, echo=FALSE, message=FALSE, warnings=FALSE,include=FALSE}
+```{r chargement des packages, echo=TRUE, message=FALSE, warnings=FALSE}
 
-pacman::p_load(tidyverse, spsurvey, maptools, cartography, readxl, viridisLite, sf)
-install.packages("maptools")
+pacman::p_load(tidyverse, spsurvey, cartography, readxl, viridisLite, sf)
 
 ```
 
@@ -54,64 +58,67 @@ setwd(Chemin)
 
 ```
 
-SI BESOIN : 
+## Importation des données via data.gouv.fr
+
+```{r source des données, echo=TRUE, message=FALSE, warnings=FALSE, eval=FALSE}
 
 download.file('http://www.donnees.statistiques.developpement-durable.gouv.fr/donneesCLC/CLC/region/CLC_D971_UTM_SHP.zip', destfile = 'CLC')
 unzip('CLC')
 
-```{r Import,, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
-
-nomenclature <- readxl::read_excel("CLC_D971_UTM_SHP/CLC_nomenclature.xls")
-couv2000 <- st_read("CLC_D971_UTM_SHP/CLC00/CLC00_D971_UTM.shp")
-couvcarte <- st_read("CLC_D971_UTM_SHP/CLC00/CLC00_D971_UTM.shp")
-couv2006 <- st_read("CLC_D971_UTM_SHP/CLC06/CLC06_D971_UTM.shp")
-couv2012 <- st_read("CLC_D971_UTM_SHP/CLC12/CLC12_D971_UTM.shp")
-
 ```
 
+## Chargement des données nécessaires
+
+```{r import, echo=TRUE, message=FALSE, warning=FALSE}
+
+# Nomenclature
+
+nomenclature <- readxl::read_excel("CLC_D971_UTM_SHP/CLC_nomenclature.xls", sheet = 4)
+
+# Shapefile de la couverture des sols
+
+# Recensement année 2000
+couv2000 <- st_read("CLC_D971_UTM_SHP/CLC00/CLC00_D971_UTM.shp", quiet = TRUE)
+
+# Recensement année 2006
+couv2006 <- st_read("CLC_D971_UTM_SHP/CLC06/CLC06_D971_UTM.shp", quiet = TRUE)
+
+# Recensement année 2012
+couv2012 <- st_read("CLC_D971_UTM_SHP/CLC12/CLC12_D971_UTM.shp", quiet = TRUE)
+
+```
 
 ## Association
 
-```{r colonne type de sol, echo=FALSE, message=FALSE}
+```{r association colonne type de sol, echo=TRUE, message=FALSE, warning=FALSE}
 
-couv2000 <- couv2000 %>% 
-  mutate(code_CLC = substr(as.character(CODE_00), 1, 1))
-
-couv2006 <- couv2006 %>% 
-  mutate(code_CLC = substr(as.character(CODE_06), 1, 1))
-
-couv2012 <- couv2012 %>% 
-  mutate(code_CLC = substr(as.character(CODE_12), 1, 1))
-
-couvcarte <- couvcarte %>% 
-  mutate(code_CLC = substr(as.character(CODE_00), 1, 1))
-
+couv2000 <- left_join(couv2000, nomenclature, by = c("CODE_00" = "code_clc_niveau_4"))
+couv2006 <- left_join(couv2006, nomenclature, by = c("CODE_06" = "code_clc_niveau_4"))
+couv2012 <- left_join(couv2012, nomenclature, by = c("CODE_12" = "code_clc_niveau_4"))
 ```
 
-```{r association,echo=FALSE, message=FALSE}
-
-couv2000 <- left_join(couv2000, nomenclature, by = c("code_CLC" = "code_clc_niveau_1"))
-couv2006 <- left_join(couv2006, nomenclature, by = c("code_CLC" = "code_clc_niveau_1"))
-couv2012 <- left_join(couv2012, nomenclature, by = c("code_CLC" = "code_clc_niveau_1"))
-couvcarte <- left_join(couvcarte, nomenclature, by = c("code_CLC" = "code_clc_niveau_1"))
-
-```
-
-
-```{r 500 ha plus et pas marin, echo=FALSE, message=FALSE}
+```{r création de la population statistique, echo=FALSE, message=FALSE, include=FALSE, warning=FALSE}
 
 couv2000 <- couv2000 %>%
-  filter(AREA_HA > 500 & code_CLC != "5")
+  group_by(CODE_00, libelle_fr) %>%
+  summarise(AREA_HA = sum(AREA_HA, na.rm = TRUE), .groups = "drop") %>%
+  filter(AREA_HA >= 500) %>% 
+  filter(CODE_00 != "5230")
 
 couv2006 <- couv2006 %>%
-  filter(AREA_HA > 500 & code_CLC != "5")
+  group_by(CODE_06, libelle_fr) %>%
+  summarise(AREA_HA = sum(AREA_HA, na.rm = TRUE), .groups = "drop") %>%
+  filter(AREA_HA >= 500) %>% 
+  filter(CODE_06 != "5230")
 
 couv2012 <- couv2012 %>%
-  filter(AREA_HA > 500 & code_CLC != "5")
-
-couvcarte <- couvcarte %>% filter(code_CLC != "5")
+  group_by(CODE_12, libelle_fr) %>%
+  summarise(AREA_HA = sum(AREA_HA, na.rm = TRUE), .groups = "drop") %>%
+  filter(AREA_HA >= 500) %>% 
+  filter(CODE_12 != "5230")
 
 ```
+
 
 # Cartographie de la typologie des sols {.tabset}
 
@@ -121,9 +128,12 @@ couvcarte <- couvcarte %>% filter(code_CLC != "5")
 
 ```{r carte couverture des sols 2000}
 
+couvcarte <- st_read("CLC_D971_UTM_SHP/CLC12/CHA12_D971_UTM.shp")
+couvcarte <- couvcarte %>% filter(CODE_12 != "5")
+
 ggplot() +
   geom_sf(data = couvcarte, fill = "grey") +
-  geom_sf(data = couv2012, aes(fill = code_CLC), color = NA) +
+  geom_sf(data = couv2012, aes(fill = CODE_12), color = NA) +
   scale_fill_viridis_d(option = "D", name = "Type de couverture des sols") +
   theme_minimal() +
   labs(title = "Couverture des sols en Guadeloupe",
@@ -139,11 +149,31 @@ ggplot() +
 
 # {-}
 
-
-
 # Création de la population statistique
 
 <hr style="border:2px solid gray">
+
+```{r création de la population statistique visible, echo=FALSE, message=FALSE, warning=FALSE}
+
+couv2000 <- couv2000 %>%
+  group_by(CODE_00, libelle_fr) %>%
+  summarise(AREA_HA = sum(AREA_HA, na.rm = TRUE), .groups = "drop") %>%
+  filter(AREA_HA >= 500) %>% 
+  filter(CODE_00 != "5230")
+
+couv2006 <- couv2006 %>%
+  group_by(CODE_06, libelle_fr) %>%
+  summarise(AREA_HA = sum(AREA_HA, na.rm = TRUE), .groups = "drop") %>%
+  filter(AREA_HA >= 500) %>% 
+  filter(CODE_06 != "5230")
+
+couv2012 <- couv2012 %>%
+  group_by(CODE_12, libelle_fr) %>%
+  summarise(AREA_HA = sum(AREA_HA, na.rm = TRUE), .groups = "drop") %>%
+  filter(AREA_HA >= 500) %>% 
+  filter(CODE_12 != "5230")
+
+```
 
 
 # GRTS
@@ -159,6 +189,9 @@ On fait un GRTS car ......
 # Cartographie via QGIS 
 
 <hr style="border:2px solid gray">
+
+
+# Limite du plan d'échantillonnage
 
 
 ::: {style="display: flex; gap: 20px; align-items: center;"}
