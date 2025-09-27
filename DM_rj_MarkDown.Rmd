@@ -16,37 +16,30 @@ output:
 </strong>
 :::
 
-# Introduction
+
+::: {style="color: darkblue; font-size: 1.2em;"}
+## Contexte et objectifs
+:::
 
 <hr style="border:2px solid gray">
 
+La mise en place d'un plan d'échantillonnage est une étape cruciale dans la collecte de données écologiques. Elle permet de garantir que les échantillons recueillis sont représentatifs de la population étudiée, tout en optimisant les ressources disponibles. Parmi les différentes méthodes d'échantillonnage, le GRTS (Generalized Random Tessellation Stratified) se distingue par sa capacité à fournir un échantillonnage spatialement équilibré, ce qui est particulièrement utile dans les études environnementales où la distribution spatiale des espèces peut être hétérogène.
 
-Vous voulez mettre en place le suivi d'une espèce terrestre en Guadeloupe. Etant en stage de 6 mois, vous n'allez pas pouvoir aller échantillonner l'île entière. Vous aimeriez néanmoins avoir une base de données fiable concernant la présence de l'espèce dans chaque type d'habitat majoritaire de l'île.
+Dans ce document nous explorons la mise en place d'un plan d'échantillonnage GRTS pour le suivi du crapaud buffle (*Rhinella marina*) en Guadeloupe. Ce choix est motivé par la nécessité de surveiller cette espèce invasive, qui a des impacts significatifs sur les écosystèmes locaux. En utilisant la base de données Corine Land Cover, nous identifions les types de couverture des sols présents sur l'île, ce qui nous permet de stratifier notre échantillonnage en fonction des habitats majeurs.
 
-Comme vous avez bien suivi vos cours de master, vous savez qu'il existe une base de donnée, Corine Land Cover, qui découpe la France entière en différents types de couverture des sols. Plus d'infos sur [le site internet CLC](https://www.statistiques.developpement-durable.gouv.fr/corine-land-cover-0).
-
-Le chunk suivant vous permet de télécharger et de dézipper la base de données Corine Land Cover depuis data.gouv pour le département de la Guadeloupe.
-
-
-layoutlayer 
-
-tableau des points avec coordonnées
-
-
-
->500 hors code mers et océan
-
-
-# Importation du .shp et association du type de couverture des sols via la nomenclature
-
-<hr style="border:2px solid gray">
-
+::: {style="color: darkblue; font-size: 1.2em;"}
+## Chargement des packages
+:::
 
 ```{r chargement des packages, echo=TRUE, message=FALSE, warnings=FALSE}
 
 pacman::p_load(tidyverse, spsurvey, cartography, readxl, viridisLite, sf)
 
 ```
+
+# I. Importation du .shp et association du type de couverture des sols via la nomenclature
+
+<hr style="border:2px solid gray">
 
 
 ```{r setup, include=FALSE, echo=FALSE, message=FALSE}
@@ -58,7 +51,9 @@ setwd(Chemin)
 
 ```
 
+::: {style="color: darkblue; font-size: 1.2em;"}
 ## Importation des données via data.gouv.fr
+:::
 
 ```{r source des données, echo=TRUE, message=FALSE, warnings=FALSE, eval=FALSE}
 
@@ -67,7 +62,9 @@ unzip('CLC')
 
 ```
 
+::: {style="color: darkblue; font-size: 1.2em;"}
 ## Chargement des données nécessaires
+:::
 
 ```{r import, echo=TRUE, message=FALSE, warning=FALSE}
 
@@ -88,7 +85,9 @@ couv2012 <- st_read("CLC_D971_UTM_SHP/CLC12/CLC12_D971_UTM.shp", quiet = TRUE)
 
 ```
 
-## Association
+::: {style="color: darkblue; font-size: 1.2em;"}
+## Association des types de sols au shapefile
+:::
 
 ```{r association colonne type de sol, echo=TRUE, message=FALSE, warning=FALSE}
 
@@ -119,21 +118,24 @@ couv2012 <- couv2012 %>%
 
 ```
 
-
-# Cartographie de la typologie des sols {.tabset}
+# II. Cartographie de la typologie des sols {.tabset}
 
 <hr style="border:2px solid gray">
 
+::: {style="color: darkblue; font-size: 1.2em;"}
 ## 2000
+:::
 
 ```{r carte couverture des sols 2000}
+
+# >500 hors code mers et océan
 
 couvcarte <- st_read("CLC_D971_UTM_SHP/CLC12/CHA12_D971_UTM.shp")
 couvcarte <- couvcarte %>% filter(CODE_12 != "5")
 
 ggplot() +
   geom_sf(data = couvcarte, fill = "grey") +
-  geom_sf(data = couv2012, aes(fill = CODE_12), color = NA) +
+  geom_sf(data = couv2012, aes(fill = libelle_fr), color = NA) +
   scale_fill_viridis_d(option = "D", name = "Type de couverture des sols") +
   theme_minimal() +
   labs(title = "Couverture des sols en Guadeloupe",
@@ -143,13 +145,17 @@ ggplot() +
 
 ```
 
+::: {style="color: darkblue; font-size: 1.2em;"}
 ## 2006
+:::
 
+::: {style="color: darkblue; font-size: 1.2em;"}
 ## 2012
+:::
 
 # {-}
 
-# Création de la population statistique
+# III. Création de la population statistique
 
 <hr style="border:2px solid gray">
 
@@ -175,8 +181,7 @@ couv2012 <- couv2012 %>%
 
 ```
 
-
-# GRTS
+# IV. GRTS
 
 <hr style="border:2px solid gray">
 
@@ -186,12 +191,17 @@ C'est une valeur arbitraire mais on justifie ce nombre par le fait que l'on veut
 
 On fait un GRTS car ...... 
 
-# Cartographie via QGIS 
+::: {style="color: darkblue; font-size: 1.2em;"}
+## tableau des points avec coordonnées
+:::
+
+# V. Cartographie via QGIS 
 
 <hr style="border:2px solid gray">
 
-
-# Limite du plan d'échantillonnage
+::: {style="color: darkblue; font-size: 1.2em;"}
+## Limite du plan d'échantillonnage
+:::
 
 
 ::: {style="display: flex; gap: 20px; align-items: center;"}
