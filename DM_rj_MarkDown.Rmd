@@ -15,12 +15,12 @@ output:
 
 ::: {style="text-align: right;"}
 Date de dernière mise à jour du document : `r Sys.Date()`   
-Ce projet est versionné et hébergé sur Github : https://github.com/Jules74660/DM_ROM_JUL.git"
+Ce projet est versionné et hébergé sur GitHub : https://github.com/Jules74660/DM_ROM_JUL.git
 :::
 
 ::: {style="background-color: black; padding: 12px; border-radius: 5px; text-align: center; margin-bottom: 20px;"}
 <strong style="color: white; font-size: 2em;">
-  Élaboration d’un plan d’échantillonnage spatialement équilibré (GRTS) pour le Crapaud Buffle (*Rhinella marina*) en Guadeloupe <br>
+  Élaboration d’un plan d’échantillonnage spatialement équilibré (GRTS) pour le Crapaud buffle (*Rhinella marina*) en Guadeloupe <br>
 </strong>
 :::
 
@@ -40,7 +40,7 @@ Rédigé par <b>Winsback Romain</b> et <b>Roes Julien</b> dans le cadre du modul
 
 Lors de l'échantillonnage d'une ressource environnementale, il est important d'appliquer une méthode de sélection probabiliste pour fournir une inférence statistique fiable de l'échantillon à la population (Conn et al. 2016). Cependant, dans de nombreux cas, la ressource environnementale est répartie de manière hétérogène dans l'espace, ce qui peut entraîner une mauvaise couverture spatiale des sites d'échantillonnage. Par conséquent, des méthodes d'échantillonnage spatialement équilibrées ont été développées pour garantir une bonne couverture spatiale des sites d'échantillonnage (Stevens et Olsen 2004).
 
-Parmi les méthodes d'échantillonnage spatialement équilibrées, le Generalized Random Tessellation Stratified (GRTS) est la méthode la plus populaire qui utilise une approche de stratification pour garantir une bonne couverture spatiale des sites d'échantillonnage (Kermorvant et al. 2019). Le GRTS divise l'entité spatiale en une grille ou tessellation de cellules, les cellules sont ensuite regroupées en strates selon un critère (ici le type de sols) ce qui permets de contrôler l'éffort d'échantillonnage par type de strates. Les cellules sont finalement randomisées selon un ordre hiérarchique qui préserve la répartition spatiale, les premiers sites sélectionnés couvrent toute la zone de manière équilibrée et si l'on ajoute des sites supplémentaires, l'équilibre spatial est conservé (Stevens et Olsen 2004).
+Parmi les méthodes d'échantillonnage spatialement équilibrées, le Generalized Random Tessellation Stratified (GRTS) est la méthode la plus populaire qui utilise une approche de stratification pour garantir une bonne couverture spatiale des sites d'échantillonnage (Kermorvant et al. 2019). Le GRTS divise l'entité spatiale en une grille ou tessellation de cellules. les cellules sont ensuite regroupées en strates selon un critère (ici le type de sols), ce qui permet de contrôler l'effort d'échantillonnage par type de strates. Les cellules sont finalement randomisées selon un ordre hiérarchique qui préserve la répartition spatiale. les premiers sites sélectionnés couvrent toute la zone de manière équilibrée et si l'on ajoute des sites supplémentaires, l'équilibre spatial est conservé (Stevens et Olsen 2004).
 
 Dans le cadre d’un stage de six mois visant à mettre en place le suivi d’une espèce terrestre en Guadeloupe, l’utilisation du GRTS permet de maximiser la représentativité des principaux types d’habitats terrestres tout en restant réaliste par rapport à la durée limitée du stage. Pour illustrer ce suivi, nous avons choisi le crapaud buffle (Rhinella marina), une espèce invasive originaire d’Amérique centrale et d’Amérique du Sud, désormais présente en Guadeloupe. 
 :::
@@ -61,7 +61,7 @@ Cette espèce peut avoir des impacts significatifs sur les écosystèmes locaux,
 
 ```{r chargement des packages, echo=TRUE, message=FALSE, warnings=FALSE}
 
-pacman::p_load(tidyverse, spsurvey, cartography, readxl, viridisLite, sf, DT, leaflet, ggspatial)
+pacman::p_load(tidyverse, spsurvey, cartography, readxl, viridisLite, sf, DT, leaflet, ggspatial, plotly, stringr, shadowtext)
 
 ```
 
@@ -76,11 +76,13 @@ unzip('CLC')
 
 ```
 
+::: {style="text-align: justify;"}
 La base de données Corine Land Cover (CLC) fournit une classification détaillée de la couverture du territoire français, y compris la Guadeloupe, et permet d’identifier les principaux types d’habitats terrestres. En combinant le GRTS avec les données CLC, il est possible de stratifier l’échantillonnage par type de sol, garantissant que chaque habitat majeur de l’île soit représenté dans l’étude.
+:::
 
 <b>
 
-# **I. Importation du .shp et association du type de couverture des sols via la nomenclature**
+# **I. Import du .shp et association du type de couverture des sols via la nomenclature**
 
 </b>
 
@@ -122,7 +124,9 @@ couv2012 <- st_read("CLC_D971_UTM_SHP/CLC12/CLC12_D971_UTM.shp", quiet = TRUE)
 
 ```
 
-Le jeu de données de 2012 a été privilégié ici pour la création du plan d’échantillonnage, car il constitue la représentation la plus récente de la couverture des sols en Guadeloupe. Les 3 jeux de données ont été importés pour comparer visuellement l'évolution de la répartition des types de sols entre 2000, 2006 et 2012, cependant on observe pas de changement majeur. 
+::: {style="text-align: justify;"}
+Le jeu de données de 2012 a été privilégié ici pour la création du plan d’échantillonnage, car il constitue la représentation la plus récente de la couverture des sols en Guadeloupe. Les 3 jeux de données ont été importés pour comparer visuellement l'évolution de la répartition des types de sols entre 2000, 2006 et 2012, cependant on n'observe pas de changement majeur. 
+:::
 
 ::: {style="color: black; font-size: 1.2em;"}
 ### Association des types de sols au shapefile
@@ -153,6 +157,10 @@ couv2012 <- couv2012 %>%
 
 <hr style="border:2px solid gray">
 
+::: {style="color: black; font-size: 1.2em;"}
+### Setup pour la cartographie
+:::
+
 ```{r setup carte, echo=TRUE, message=FALSE, warning=FALSE, include=TRUE}
 # CREATION des couleurs correspondants aux types de sols
 nomenclature$couleur <- rgb(nomenclature$rouge, nomenclature$vert, nomenclature$bleu, maxColorValue = 255)
@@ -178,6 +186,10 @@ couleurs_CLC_code <- setNames(couv2012$couleur, couv2012$libelle_code)
 
 ```
 
+::: {style="color: black; font-size: 1.2em;"}
+### Cartographie de la couverture des sols en Guadeloupe selon les données Corine Land Cover 2012
+:::
+
 ```{r carte couverture des sols 2012, echo=TRUE, message=FALSE, warning=FALSE, include=TRUE, fig.width=10, fig.height=8}
 
 ggplot() +
@@ -186,26 +198,25 @@ ggplot() +
   theme_minimal() +
   scale_fill_manual(
     values = couleurs_CLC_code,
-    name = "Type de couverture des sols (hors mers et océans (5230) et < 500 ha)") +
+    name = "Type de sol (Code CLC ≥ 500 ha, hors mers et océans)",) +
   annotation_scale(location = "br", width_hint = 0.3) +
   annotation_north_arrow(
     location = "tl",
     which_north = "true",
-    pad_x = unit(0.5, "cm"),
-    pad_y = unit(0.5, "cm"),
+    pad_x = unit(0.2, "cm"),
+    pad_y = unit(0.2, "cm"),
     style = north_arrow_fancy_orienteering) +
   labs(
-    title = "Couverture des sols en Guadeloupe",
-    subtitle = "Données Corine Land Cover 2012",
+    title = "Carte de la couverture des sols en Guadeloupe avec points d’échantillonnage GRTS",
+    subtitle = "Données Corine Land Cover 2012 et sites tiré du GRTS",
     caption = "Source : data.gouv.fr") +
   theme(
-    legend.position = "right",
+    legend.position = "right", 
     legend.key.size = unit(0.6, "cm"),
-    legend.text = element_text(size = 8),
-    legend.title = element_text(size = 10, face = "bold"),
+    legend.text = element_text(size = 7),
+    legend.title = element_text(size = 9, face = "bold"),
     plot.title = element_text(face = "bold", size = 14),
     plot.subtitle = element_text(size = 10))
-
 ```
 
 <b>
@@ -226,12 +237,17 @@ couv2012 <- couv2012 %>%
 
 ```
 
+**La population statistique est constituée des 13 types de sols terrestres (hors mers et océans) de plus de 500 ha (cumulés par type de sol) recensés en Guadeloupe selon les données Corine Land Cover 2012 (visibles dans le tableau ci-dessous).**
+
 ```{r table de la pop stat, echo=TRUE, message=FALSE, warning=FALSE}
 
+# FORMATAGE des données pour le tableau
 couvtable <- couv2012 %>% 
   dplyr::select(CODE_12, libelle_fr, AREA_HA) %>% st_drop_geometry() %>% mutate(
     AREA_HA = round(AREA_HA, 0), "Type de sol" = libelle_fr) %>% 
   dplyr::select("Type de sol", "Code CLC" = CODE_12, "Surface (ha)" = AREA_HA)
+
+# TABLEAU des types de sols (TYPE DE SOL / CODE CLC / SURFACE CUMULÉ en HA)
 
 DT::datatable(
   couvtable,
@@ -262,6 +278,7 @@ formatStyle(
 library(spsurvey)
 ```
 
+::: {style="text-align: justify;"}
 On utilise le package « spsurvey » qui contient la fonction permettant d’effectuer un tirage par GRTS.
 
 ```{r grts, echo=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
@@ -309,6 +326,7 @@ write.csv(GRTS_df, "tirage_GRTS.csv", row.names = FALSE)
 ```
 
 On exporte également le tableau du tirage effectué pour manipuler le même tirage GRTS sous R.
+:::
 
 ::: {style="color: black; font-size: 1.2em;"}
 ## tableau des sites issues du tirage GRTS
@@ -333,7 +351,7 @@ DT::datatable(
   options = list(
     scrollX = TRUE,
     autoWidth = FALSE,
-    pageLength = 12,
+    pageLength = 10,
     columnDefs = list(list(width = '250px', targets = "_all"))),
   width = "100%",
   height = "auto",
@@ -351,36 +369,56 @@ DT::datatable(
 GRTS_sf <- st_as_sf(GRTS_df, coords = c("Longitude", "Latitude"), crs = 4326)
 GRTS_sf <- st_transform(GRTS_sf, st_crs(couv2012))
 couv2012 <- couv2012 %>%
-  mutate(libelle_code = paste0(libelle_fr, " (", CODE_12, ")"))
+  mutate(libelle_code = str_wrap(paste0(libelle_fr, " (", CODE_12, ")")))
+
+#GRTS_sf <- GRTS_sf %>%
+#  left_join(select(GRTS_df, siteID, TypeSol = `Type de sol (code CLC)`), by = "siteID")
+
+GRTS_sf <- GRTS_sf %>% mutate(siteID = str_remove(siteID, "site_"))
+
+couv2012 <- couv2012 %>%
+  mutate(libelle_code = str_replace_all(libelle_code, "\n", " "))
 
 ggplot() +
   geom_sf(data = couvcarte, fill = "grey95", color = NA) +
   geom_sf(data = couv2012, aes(fill = libelle_code), color = "grey40", linewidth = 0.05) +
-  geom_sf(data = GRTS_sf, color = "white", size = 2, shape = 21, fill = "black") +
+  geom_sf(data = GRTS_sf,
+          aes(text = paste0("Site : ", siteID, "<br>Type de sol : ", `Type de sol (code CLC)`)),
+          color = "white", size = 3, shape = 21, fill = "black") +
+  geom_shadowtext(
+    data = GRTS_sf,
+    aes(geometry = geometry, label = siteID),
+    stat = "sf_coordinates",
+    nudge_x = 2000,
+    nudge_y = 0,              
+    size = 2.3,                      
+    color = "black", 
+    bg.color = "white", 
+    bg.r = 0.15
+  ) +
   theme_minimal() +
   scale_fill_manual(
     values = couleurs_CLC_code,
-    name = "Type de sol (Code CLC ≥ 500 ha, hors mers et océans)") +
+    name = "Type de sol (Code CLC ≥ 500 ha, hors mers et océans)",) +
   annotation_scale(location = "br", width_hint = 0.3) +
   annotation_north_arrow(
     location = "tl",
     which_north = "true",
-    pad_x = unit(0.5, "cm"),
-    pad_y = unit(0.5, "cm"),
+    pad_x = unit(0.2, "cm"),
+    pad_y = unit(0.2, "cm"),
     style = north_arrow_fancy_orienteering) +
   labs(
     title = "Carte de la couverture des sols en Guadeloupe avec points d’échantillonnage GRTS",
     subtitle = "Données Corine Land Cover 2012 et sites tiré du GRTS",
     caption = "Source : data.gouv.fr") +
   theme(
-    legend.position = "right",
+    legend.position = "right", 
     legend.key.size = unit(0.6, "cm"),
-    legend.text = element_text(size = 8),
-    legend.title = element_text(size = 10, face = "bold"),
+    legend.text = element_text(size = 7),
+    legend.title = element_text(size = 9, face = "bold"),
     plot.title = element_text(face = "bold", size = 14),
-    plot.subtitle = element_text(size = 10))
-
-
+    plot.subtitle = element_text(size = 10), 
+    axis.title = element_blank())
 ```
 
 <b>
@@ -399,6 +437,12 @@ ggplot() +
 ## Limites du plan d'échantillonnage
 :::
 
+::: {style="text-align: justify;"}
+
+Le plan d’échantillonnage mis en place repose sur une stratification par type de couverture de sol et un nombre égal de sites par habitat. En effet, l’effort d’échantillonnage est uniforme au sein des 13 habitats, quelle que soit leur surface. Le choix de cette méthode peut entraîner un sous-échantillonnage des habitats les plus étendus, biaisant ainsi la probabilité de détecter l’espèce dans les habitats majeurs de l’île. De plus, les habitats de moins de 500 ha sont exclus. Même s’il est précisé que l’objectif du stage est d’obtenir « une base de données fiable concernant la présence de l’espèce dans chaque type d’habitat majoritaire de l’île », c’est sans doute le choix de cette méthode qui contraint la structure à se concentrer seulement sur les habitats majoritaires. La faible superficie d’un habitat traduit rarement un faible intérêt écologique. Enfin, la stratification se fait uniquement sur le type de sol, alors que la présence d’une espèce comme le crapaud buffle peut dépendre de multiples facteurs écologiques qui ne sont pas pris en compte ici : disponibilité en eau, humidité locale, végétation, connectivité des sites, pressions anthropiques…
+
+En prenant en compte ces limites, il serait possible de conserver la stratification par type de sol tout en adaptant le nombre de sites à la superficie de chaque habitat. Ainsi, les habitats plus étendus recevraient davantage de sites, ce qui permettrait de mieux capturer leur hétérogénéité écologique, tandis que les habitats plus petits seraient toujours représentés par un nombre minimum de sites. Ce protocole proportionnel améliorerait la fiabilité de la base de données tout en limitant les biais liés à la variation des facteurs environnementaux.
+:::
 
 ::: {style="color: black; font-size: 1.2em;"}
 ## Références bibliographiques
