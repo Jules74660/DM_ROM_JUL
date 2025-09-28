@@ -97,7 +97,7 @@ setwd(Chemin)
 
 nomenclature <- readxl::read_excel("CLC_D971_UTM_SHP/CLC_nomenclature.xls", sheet = 4)
 
-# Shapefile de la couverture des sols
+# Shapefiles de la couverture des sols
 
 # Recensement année 2000
 couv2000 <- st_read("CLC_D971_UTM_SHP/CLC00/CLC00_D971_UTM.shp", quiet = TRUE)
@@ -109,6 +109,8 @@ couv2006 <- st_read("CLC_D971_UTM_SHP/CLC06/CLC06_D971_UTM.shp", quiet = TRUE)
 couv2012 <- st_read("CLC_D971_UTM_SHP/CLC12/CLC12_D971_UTM.shp", quiet = TRUE)
 
 ```
+
+Le jeu de données de 2012 a été privilégié ici pour la création du plan d’échantillonnage, car il constitue la représentation la plus récente de la couverture des sols en Guadeloupe. Les 3 jeux de données ont été importés pour comparer visuellement l'évolution de la répartition des types de sols entre 2000, 2006 et 2012, cependant on observe pas de changement majeur. 
 
 ::: {style="color: black; font-size: 1.2em;"}
 ### Association des types de sols au shapefile
@@ -287,28 +289,9 @@ GRTS_df <- read_csv("tirage_GRTS.csv") %>%
 
 GRTS_df <- GRTS_df %>% mutate(
     Identifiant = paste0("site_", row_number())) %>%
-  dplyr::select(Identifiant, lon_WGS84, lat_WGS84, libelle_fr) %>% # remise en ordre des colonnes
+  dplyr::select(Identifiant, lon_WGS84, lat_WGS84, libelle_fr) %>%
   rename(Longitude = lon_WGS84,Latitude = lat_WGS84,`Type de sol (code CLC)` = libelle_fr, siteID = Identifiant)
 
-```
-
-```{r couleurs, echo=TRUE, message=FALSE, warning=FALSE, include=FALSE}
-
-# CREATION du vecteur de couleurs PERSONELS
-couleurs_PERS <- c(
-  "Tissu urbain discontinu" = "#440154CC",
-  "Zones industrielles ou commerciales et installations publiques" = "#481F70CC",
-  "Canne à sucre" = "#443A83CC",
-  "Bananeraies" = "#3B528BCC",
-  "Prairies et autres surfaces toujours en herbe à usage agricole" = "#31688ECC",
-  "Systèmes culturaux et parcellaires complexes" = "#287C8ECC",
-  "Surfaces essentiellement agricoles, interrompues par des espaces naturels importants" = "#21908CCC",
-  "Forêts de feuillus" = "#20A486CC",
-  "Mangroves" = "#35B779CC",
-  "Landes et broussailles" = "#5DC863CC",
-  "Végétation sclérophylle" = "#8FD744CC",
-  "Forêt et végétation arbustive en mutation" = "#C7E020CC",
-  "Marais intérieurs" = "#FDE725CC")
 ```
 
 ```{r tableau, echo=FALSE, message=FALSE, warning=FALSE}
@@ -331,6 +314,43 @@ DT::datatable(
 
 ```
 
+```{r carte grts, echo=TRUE, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
+
+GRTS_sf <- st_as_sf(GRTS_df, coords = c("Longitude", "Latitude"), crs = 4326)
+GRTS_sf <- st_transform(GRTS_sf, st_crs(couv2012))
+couv2012 <- couv2012 %>%
+  mutate(libelle_code = paste0(libelle_fr, " (", CODE_12, ")"))
+
+ggplot() +
+  geom_sf(data = couvcarte, fill = "grey95", color = NA) +
+  geom_sf(data = couv2012, aes(fill = libelle_code), color = "grey40", linewidth = 0.05) +
+  geom_sf(data = GRTS_sf, color = "white", size = 2, shape = 21, fill = "black") +
+  theme_minimal() +
+  scale_fill_manual(
+    values = couleurs_CLC_code,
+    name = "Type de sol (Code CLC ≥ 500 ha, hors mers et océans)") +
+  annotation_scale(location = "br", width_hint = 0.3) +
+  annotation_north_arrow(
+    location = "tl",
+    which_north = "true",
+    pad_x = unit(0.5, "cm"),
+    pad_y = unit(0.5, "cm"),
+    style = north_arrow_fancy_orienteering) +
+  labs(
+    title = "Carte de la couverture des sols en Guadeloupe avec points d’échantillonnage GRTS",
+    subtitle = "Données Corine Land Cover 2012 et sites tiré du GRTS",
+    caption = "Source : data.gouv.fr") +
+  theme(
+    legend.position = "right",
+    legend.key.size = unit(0.6, "cm"),
+    legend.text = element_text(size = 8),
+    legend.title = element_text(size = 10, face = "bold"),
+    plot.title = element_text(face = "bold", size = 14),
+    plot.subtitle = element_text(size = 10))
+
+
+```
+
 <b>
 
 # **V. Cartographie via QGIS**
@@ -348,4 +368,4 @@ DT::datatable(
 ## Références bibliographiques
 :::
 
-Angin, B., Questel, K., Sculfort, O., Courtois, E. A., Massary, J.-C., Frétey, T., & Dewynter, M. (2024) Les Amphibiens et les Reptiles de la Guadeloupe : identication, répartition et bibliographie. Herp me!, 9: 1–82
+Angin, B., Questel, K., Sculfort, O., Courtois, E. A., Massary, J.-C., Frétey, T., & Dewynter, M. (2024) Les Amphibiens et les Reptiles de la Guadeloupe : identification, répartition et bibliographie.
