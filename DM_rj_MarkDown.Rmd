@@ -14,12 +14,13 @@ output:
 :::
 
 ::: {style="text-align: right;"}
-Date de dernière mise à jour du document : `r Sys.Date()`
+Date de dernière mise à jour du document : `r Sys.Date()`   
+Ce projet est versionné et hébergé sur Github : https://github.com/Jules74660/DM_ROM_JUL.git"
 :::
 
 ::: {style="background-color: black; padding: 12px; border-radius: 5px; text-align: center; margin-bottom: 20px;"}
 <strong style="color: white; font-size: 2em;">
-  Élaboration d’un plan d’échantillonnage spatial (GRTS) pour le Crapaud Buffle (*Rhinella marina*) en Guadeloupe <br>
+  Élaboration d’un plan d’échantillonnage spatialement équilibré (GRTS) pour le Crapaud Buffle (*Rhinella marina*) en Guadeloupe <br>
 </strong>
 :::
 
@@ -35,15 +36,23 @@ Rédigé par <b>Winsback Romain</b> et <b>Roes Julien</b> dans le cadre du modul
 
 <hr style="border:1.5px solid gray">
 
-La mise en place d'un plan d'échantillonnage est une étape cruciale dans la collecte de données écologiques. Elle permet de garantir que les échantillons recueillis sont représentatifs de la population étudiée, tout en optimisant les ressources disponibles. Parmi les différentes méthodes d'échantillonnage, le GRTS (Generalized Random Tessellation Stratified) se distingue par sa capacité à fournir un échantillonnage spatialement équilibré, ce qui est particulièrement utile dans les études environnementales où la distribution spatiale des espèces peut être hétérogène.
+::: {style="text-align: justify;"}
 
-Dans ce document nous explorons la mise en place d'un plan d'échantillonnage GRTS pour le suivi du crapaud buffle (*Rhinella marina*) en Guadeloupe. Ce choix est motivé par la nécessité de surveiller cette espèce invasive, qui a des impacts significatifs sur les écosystèmes locaux. En utilisant la base de données Corine Land Cover, nous identifions les types de couverture des sols présents sur l'île, ce qui nous permet de stratifier notre échantillonnage en fonction des habitats majeurs.
+Lors de l'échantillonnage d'une ressource environnementale, il est important d'appliquer une méthode de sélection probabiliste pour fournir une inférence statistique fiable de l'échantillon à la population (Conn et al. 2016). Cependant, dans de nombreux cas, la ressource environnementale est répartie de manière hétérogène dans l'espace, ce qui peut entraîner une mauvaise couverture spatiale des sites d'échantillonnage. Par conséquent, des méthodes d'échantillonnage spatialement équilibrées ont été développées pour garantir une bonne couverture spatiale des sites d'échantillonnage (Stevens et Olsen 2004).
+
+Parmi les méthodes d'échantillonnage spatialement équilibrées, le Generalized Random Tessellation Stratified (GRTS) est la méthode la plus populaire qui utilise une approche de stratification pour garantir une bonne couverture spatiale des sites d'échantillonnage (Kermorvant et al. 2019). Le GRTS divise l'entité spatiale en une grille ou tessellation de cellules, les cellules sont ensuite regroupées en strates selon un critère (ici le type de sols) ce qui permets de contrôler l'éffort d'échantillonnage par type de strates. Les cellules sont finalement randomisées selon un ordre hiérarchique qui préserve la répartition spatiale, les premiers sites sélectionnés couvrent toute la zone de manière équilibrée et si l'on ajoute des sites supplémentaires, l'équilibre spatial est conservé (Stevens et Olsen 2004).
+
+Dans le cadre d’un stage de six mois visant à mettre en place le suivi d’une espèce terrestre en Guadeloupe, l’utilisation du GRTS permet de maximiser la représentativité des principaux types d’habitats terrestres tout en restant réaliste par rapport à la durée limitée du stage. Pour illustrer ce suivi, nous avons choisi le crapaud buffle (Rhinella marina), une espèce invasive originaire d’Amérique centrale et d’Amérique du Sud, désormais présente en Guadeloupe. 
+:::
 
 ::: {style="display: flex; gap: 20px; align-items: center;"}
 ![](rhinella_marina.png)
 :::
 
-Étant donné la durée limitée du stage (6 mois), il est essentiel de concevoir un plan d'échantillonnage efficace qui maximise la probabilité de détecter la présence du crapaud buffle dans les différents types d'habitats, tout en minimisant le temps et les ressources nécessaires pour la collecte des données. Le GRTS offre une solution adaptée à ces contraintes, en assurant une couverture spatiale adéquate et en facilitant l'analyse statistique des données recueillies.
+<u> **Figure 1 : *Rhinella marina* (crapaud buffle) (source : Angin et al., 2024)** </u>
+
+::: {style="text-align: justify;"}
+Cette espèce peut avoir des impacts significatifs sur les écosystèmes locaux, notamment par la prédation sur les espèces indigènes et la compétition pour les ressources. Son suivi spatial est donc crucial pour comprendre sa répartition et orienter les actions de gestion.
 
 ::: {style="color: black; font-size: 1.2em;"}
 ### Chargement et installation des packages
@@ -66,6 +75,9 @@ download.file('http://www.donnees.statistiques.developpement-durable.gouv.fr/don
 unzip('CLC')
 
 ```
+
+La base de données Corine Land Cover (CLC) fournit une classification détaillée de la couverture du territoire français, y compris la Guadeloupe, et permet d’identifier les principaux types d’habitats terrestres. En combinant le GRTS avec les données CLC, il est possible de stratifier l’échantillonnage par type de sol, garantissant que chaque habitat majeur de l’île soit représenté dans l’étude.
+
 <b>
 
 # **I. Importation du .shp et association du type de couverture des sols via la nomenclature**
@@ -250,19 +262,36 @@ formatStyle(
 library(spsurvey)
 ```
 
-C'est une valeur arbitraire mais on justifie ce nombre par le fait que l'on veut un nombre d'échantillons gérable en 6 mois de stage.
+On utilise le package « spsurvey » qui contient la fonction permettant d’effectuer un tirage par GRTS.
 
 ```{r grts, echo=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
 
-n_base <- c("1" = 10, "2" = 10, "3" = 10)
+codes <- c("1120","1210","2112","2222","2310","2420","2430",
+                  "3111","3112","3220","3230","3240","4110")
+```
+
+L’objet « codes » contient les codes correspondant à la nomenclature Corine Land Cover des 13 habitats respectant les critères de sélection évoqués plus tôt (habitat terrestre d’une surface cumulée supérieure à 500 ha). 
+
+```{r grts n, echo=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+
+n_base <- setNames(rep(3, length(codes)), codes)
 
 GRTSpts <- grts(
   sframe = couv2012,
   n_base = n_base,
-  stratum_var = "code_CLC",
+  stratum_var = "CODE_12",
   DesignID = "DM_Rom_Jul")
 ```
 
+La fonction grts() permet de tirer aléatoirement des points par l’intermédiaire de la méthode GRTS, en spécifiant la population statistique (sframe), le nombre de sites à tirer (n_base) et le critère de stratification (stratum_var). Ici, on crée donc un objet « n_base » qui permet de spécifier que l’on souhaite échantillonner 3 sites par habitat, et on stocke l’ensemble des points dans l’objet « GRTSpts ». 
+
+La décision a été prise de tirer **3 points** par habitat pour garantir une bonne représentativité de chaque type de sol, tout en tenant compte des contraintes logistiques et temporelles liées à la durée limitée du stage. Ce choix permet d'obtenir un échantillon suffisamment diversifié pour analyser la présence du crapaud buffle dans différents environnements, tout en restant réaliste quant à la capacité d'échantillonnage sur une période de six mois (**39 points au total**).
+
+```{r pour la carte QGIS, echo=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+st_write(GRTS_sf, "tirage_GRTS.shp", delete_dsn = TRUE)
+```
+
+Grâce à la fonction st_as_sf(), on transforme le tableau de points obtenus en objet spatial de type sf manipulable sous R.
 
 ```{r sf, echo=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
 GRTS_sf <- st_as_sf(GRTSpts$sites_base, coords = c("X","Y"), crs = st_crs(couv2012))
@@ -272,11 +301,14 @@ st_write(GRTS_sf, "tirage_GRTS.shp", delete_dsn = TRUE)
 
 ```
 
+La fonction st_write() permet de convertir cet objet spatial en un fichier .shp exploitable notamment sous QGIS.
+
 ```{r csv, echo=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
 GRTS_df <- GRTSpts$sites_base
 write.csv(GRTS_df, "tirage_GRTS.csv", row.names = FALSE)
 ```
 
+On exporte également le tableau du tirage effectué pour manipuler le même tirage GRTS sous R.
 
 ::: {style="color: black; font-size: 1.2em;"}
 ## tableau des sites issues du tirage GRTS
@@ -359,6 +391,10 @@ ggplot() +
 
 <hr style="border:2px solid gray">
 
+::: {style="display: flex; gap: 20px; align-items: center;"}
+![](carto.jpeg)
+:::
+
 ::: {style="color: black; font-size: 1.2em;"}
 ## Limites du plan d'échantillonnage
 :::
@@ -369,3 +405,10 @@ ggplot() +
 :::
 
 Angin, B., Questel, K., Sculfort, O., Courtois, E. A., Massary, J.-C., Frétey, T., & Dewynter, M. (2024) Les Amphibiens et les Reptiles de la Guadeloupe : identification, répartition et bibliographie.
+
+Conn, P. B., Moreland, E. E., Regehr, E. V., Richmond, E. L., Cameron, M. F., & Boveng, P. L. (2016). Using simulation to evaluate wildlife survey designs: polar bears and seals in the Chukchi Sea. Royal Society Open Science, 3, 150561. https://doi.org/10.1098/rsos.150561.
+
+Don L Stevens Jr. & Anthony R Olsen (2004) Spatially Balanced Sampling of Natural Resources, Journal of the American Statistical Association, 99:465, 262-278. http://dx.doi.org/10.1198/016214504000000250
+
+Kermorvant C, D'Amico F, Bru N, Caill-Milly N, Robertson B. Spatially balanced sampling designs for environmental surveys. Environ Monit Assess. 2019 Jul 30;191(8):524. doi: 10.1007/s10661-019-7666-y. PMID: 31363924.
+
